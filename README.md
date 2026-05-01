@@ -96,6 +96,7 @@ CAPE / CIN；
 雷达和卫星演变；
 模式预报偏差；
 结论与后续问题。
+
 四、核心逻辑流
 
 用户输入研究目标
@@ -117,3 +118,54 @@ CAPE / CIN；
 人工审核、修改和确认
 ↓
 沉淀为个例库和可复用诊断模板
+
+这是一个单文件可运行版本，包含：
+
+数据接入 Agent：读取 NetCDF / GRIB / CSV
+质量控制 Agent：缺测、物理阈值、IQR 异常、时间跳变、空间一致性
+诊断分析 Agent：强降水、台风、高温、寒潮、通用个例诊断
+绘图 Agent：自动生成格点图、站点散点图、时间序列图
+报告 Agent：自动生成 case_report.md
+CLI 命令行入口
+演示数据生成器
+
+先安装依赖：
+
+pip install numpy pandas xarray matplotlib pyyaml netCDF4 scipy
+
+测试运行：
+
+python meteo_multi_source_qc_diagnostic_agent.py \
+  --make-sample \
+  --input ./sample_data \
+  --output ./outputs \
+  --case-name "强降水演示个例" \
+  --event heavy_rain
+
+真实资料运行示例：
+
+python meteo_multi_source_qc_diagnostic_agent.py \
+  --input ./data \
+  --output ./outputs \
+  --case-name "2024-07-20 强降水个例" \
+  --event heavy_rain \
+  --start "2024-07-20 00:00" \
+  --end "2024-07-21 00:00" \
+  --region "110,116,30,35"
+
+输出目录会生成：
+
+outputs/
+├── case_report.md
+├── manifest.json
+├── run.log
+├── figures/
+│   ├── acc_precip_xxx.png
+│   ├── max_wind_xxx.png
+│   └── ...
+└── tables/
+    ├── inventory.csv
+    ├── qc_records.csv
+    └── station_acc_precip_xxx.csv
+
+这版是本地规则化 Agent 编排框架，不依赖在线大模型 API，适合先跑通业务闭环。后续可在 ReportAgent 或 DiagnosticAgent 中接入 LLM，用于更强的天气系统解释、自动归因和报告润色。
